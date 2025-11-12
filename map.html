@@ -1,1 +1,98 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Interactive Route Map</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="qrc:///qtwebchannel/qwebchannel.js"></script>
+    <style>
+      html,
+      body,
+      #map {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
+      #findPathBtn {
+        position: absolute;
+        top: 10px;
+        left: 50%;
+        transform: translateX(-50%);
+        background-color: #0078ff;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        padding: 10px 20px;
+        cursor: pointer;
+        font-size: 14px;
+        z-index: 1000;
+      }
+    </style>
+  </head>
+  <body>
+    <button id="findPathBtn">Find Shortest Path</button>
+    <div id="map"></div>
+    <script>
+      const map = L.map("map").setView([23.5937, 80.9629], 5.5); // Center of India
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        maxZoom: 19,
+        attribution: "&copy; OpenStreetMap contributors",
+      }).addTo(map);
+
+      let points = [];
+      let markers = [];
+
+      map.on("click", (e) => {
+        if (points.length >= 2) {
+          alert(
+            "Already selected two points! Click 'Find Shortest Path' or refresh."
+          );
+          return;
+        }
+
+        points.push(e.latlng);
+        const marker = L.marker(e.latlng)
+          .addTo(map)
+          .bindPopup(
+            `Point ${points.length}<br>Lat: ${e.latlng.lat.toFixed(
+              4
+            )}, Lng: ${e.latlng.lng.toFixed(4)}`
+          )
+          .openPopup();
+        markers.push(marker);
+      });
+
+      // Wait for connection to C++
+      new QWebChannel(qt.webChannelTransport, function (channel) {
+        window.bridge = channel.objects.bridge;
+      });
+
+      document.getElementById("findPathBtn").addEventListener("click", () => {
+        if (points.length < 2) {
+          alert("Select two points on the map first!");
+          return;
+        }
+
+        // Send both points to C++
+        bridge.findShortestPath(
+          points[0].lat,
+          points[0].lng,
+          points[1].lat,
+          points[1].lng
+        );
+      });
+
+      // Receive path info from C++
+      function showPath(pathText) {
+        alert("Shortest path:\n" + pathText);
+      }
+      window.showPath = showPath;
+    </script>
+  </body>
+</html>
 
