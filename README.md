@@ -34,24 +34,25 @@ A DSA-focused route planning system built using C++ (Qt Framework) that visualiz
 - Uses **mutex locks** for safe concurrent access  
 - Separate thread handles **traffic simulation** independently  
 
-
-## FILE STRUCTURE
+## File Structure
 
 Smart-Route-Planner/
 │
-├── 
-│   └── smart_route_planner_qt.cpp     # main source code file integrated with GUI
+├── src/
+│ └── smart_route_planner_qt.cpp # Main source code file integrated with Qt GUI
 │
-├──                      
-│   └── map.html                       # this is used to display map using leafflet.js and openstreetmap which allows user to directly select cities 
-│                                         from the map
-├── 
-│   └── smart_route_planner_qt.pro     # this contains the required QT libraries for running the GUI
+├── web/
+│ └── map.html # Displays an interactive map using Leaflet.js and OpenStreetMap
+│ # Allows users to directly select cities from the map interface
 │
-├──
-│   └── backend_code.cpp               # (IMP) this file contains all the main DSA loigcs and functions that work in backend (without GUI)
+├── project/
+│ └── smart_route_planner_qt.pro # Qt project file containing library and build configurations
 │
-├── README.md                          # project description
+├── backend/
+│ └── backend_code.cpp # (Important) Contains all core DSA logic and backend functions
+│ # Handles route calculations, graph algorithms, and data management
+│
+├── README.md # Project documentation and overview
 
 
 ## How to run
@@ -65,13 +66,14 @@ Smart-Route-Planner/
 - a execulable file will be created in the same project folder with name smart_route_planner_qt
 - run ./smart_route_planner_qt
 
-  ## Core DSA Concepts used
-  - 🕸️ Graph Representation (Adjacency List) -> for graph creation
-  - ⚡ Dijkstra’s Algorithm ->for finding the shortest path between cities
-  - ⏳ Priority Queue (Min-Heap)
-  - 📦 Hash Maps (Unordered Map) -> to map cities to their alloted number
-  - 🗃️ Arrays & Vectors
-  - 🧩 Path Reconstruction (Backtracking) -> update the path frequently after change in the traffic weight
-  - 🔐 Thread Safety with Mutex and Atomic Variables
-  - 🔄 Randomization & Simulation -> to update the traffic weights randomly
-  - 💾 File I/O -> save and load map directly from a file
+ ## Core DSA Concepts used
+ 
+- 🕸️ Graph Representation (Adjacency List) -> for graph creation
+ - ⚡ Dijkstra’s Algorithm ->for finding the shortest path between cities
+ - ⏳ Priority Queue (Min-Heap)
+ - 📦 Hash Maps (Unordered Map) -> to map cities to their alloted number
+ - 🗃️ Arrays & Vectors
+ - 🧩 Path Reconstruction (Backtracking) -> update the path frequently after change in the traffic weight
+ - 🔐 Thread Safety with Mutex and Atomic Variables
+ - 🔄 Randomization & Simulation -> to update the traffic weights randomly
+ - 💾 File I/O -> save and load map directly from a file
