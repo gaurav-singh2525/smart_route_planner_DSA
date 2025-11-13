@@ -723,4 +723,78 @@ void backgroundTrafficSimulation(RoadMap &map,
     }
 }
 
+int main()
+{
+    RoadMap indianRoads;
 
+    // Add some sample roads between major cities
+    indianRoads.connectCities("Delhi", "Jaipur", 280, "NH48");
+    indianRoads.connectCities("Delhi", "Chandigarh", 250, "NH44");
+    indianRoads.connectCities("Delhi", "Lucknow", 530, "NH27");
+    indianRoads.connectCities("Delhi", "Bengaluru", 2100, "NH44");
+
+    // Add state capitals with their GPS coordinates
+    vector<pair<string, pair<double, double>>> stateCapitals = {
+        {"Bhubaneswar", {20.2961, 85.8245}},
+        {"Jaipur", {26.9124, 75.7873}},
+        {"Gangtok", {27.3389, 88.6065}},
+        {"Chennai", {13.0827, 80.2707}},
+        {"Hyderabad", {17.3850, 78.4867}},
+        {"Agartala", {23.8315, 91.2868}},
+        {"Lucknow", {26.8467, 80.9462}},
+        {"Dehradun", {30.3165, 78.0322}},
+        {"Kolkata", {22.5726, 88.3639}}};
+
+    // Set GPS coordinates for all state capitals
+    for (auto &capital : stateCapitals)
+    {
+        indianRoads.setCityLocation(capital.first, capital.second.first, capital.second.second);
+    }
+
+    // Display the current map
+    string mapInfo;
+    indianRoads.displayMapInfo(mapInfo);
+    cout << mapInfo << endl;
+
+    // Find and display the shortest route from Delhi to Jaipur
+    auto [distances, previousCities] = indianRoads.findShortestPaths("Delhi");
+    int jaipurNumber = indianRoads.cityToNumber["Jaipur"];
+
+    if (distances[jaipurNumber] < VERY_LARGE_NUMBER)
+    {
+        auto pathNumbers = indianRoads.buildPath(previousCities, jaipurNumber);
+
+        cout << "\nShortest path from Delhi to Jaipur: ";
+        for (size_t i = 0; i < pathNumbers.size(); i++)
+        {
+            cout << indianRoads.numberToCity[pathNumbers[i]];
+            if (i + 1 < pathNumbers.size())
+                cout << " -> ";
+        }
+        cout << "\nTotal distance: " << distances[jaipurNumber] << endl;
+    }
+
+    // Save the map to a file
+    indianRoads.saveMapToFile("map.dat");
+
+    // Start the traffic simulation in the background
+    atomic<bool> keepProgramRunning(true);
+    atomic<bool> trafficSimulationOn(true);
+
+    thread trafficThread(backgroundTrafficSimulation, ref(indianRoads),
+                         ref(keepProgramRunning), ref(trafficSimulationOn),
+                         [](const string &msg)
+                         { cout << msg << endl; });
+
+    // Let the program run for 30 seconds
+    this_thread::sleep_for(chrono::seconds(30));
+
+    // Stop the program
+    keepProgramRunning = false;
+
+    // Wait for the traffic thread to finish
+    if (trafficThread.joinable())
+        trafficThread.join();
+
+    return 0;
+}
