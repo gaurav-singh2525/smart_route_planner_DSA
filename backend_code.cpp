@@ -313,6 +313,92 @@ struct RoadMap // struct to create graph
 
         return true;
     }
+
+    pair<vector<ll>, vector<int>> findShortestPaths(const string &startCity) const
+    {
+        vector<ll> shortestDistances(totalCities, VERY_LARGE_NUMBER);
+        vector<int> previousCity(totalCities, -1);
+
+        auto cityLookup = cityToNumber.find(startCity);
+        if (cityLookup == cityToNumber.end())
+            return {shortestDistances, previousCity};
+
+        int startCityNum = cityLookup->second;
+
+        using CityDistance = pair<ll, int>;
+        priority_queue<CityDistance, vector<CityDistance>, greater<CityDistance>> citiesToCheck;
+
+        shortestDistances[startCityNum] = 0;
+        citiesToCheck.push({0, startCityNum});
+
+        while (!citiesToCheck.empty())
+        {
+            auto [currentDistance, currentCity] = citiesToCheck.top();
+            citiesToCheck.pop();
+
+            if (currentDistance != shortestDistances[currentCity])
+                continue;
+
+            for (const auto &road : roadsFromCity[currentCity])
+            {
+                if (!road.isOpen)
+                    continue;
+
+                int neighborCity = road.connectedCity;
+                ll newDistance = currentDistance + road.travelTime;
+
+                if (newDistance < shortestDistances[neighborCity])
+                {
+                    shortestDistances[neighborCity] = newDistance;
+                    previousCity[neighborCity] = currentCity;
+                    citiesToCheck.push({newDistance, neighborCity});
+                }
+            }
+        }
+
+        return {shortestDistances, previousCity};
+    }
+    pair<vector<ll>, vector<int>> findShortestPathsFromNumber(int startCityNum) const
+    {
+        vector<ll> shortestDistances(totalCities, VERY_LARGE_NUMBER);
+        vector<int> previousCity(totalCities, -1);
+
+        if (startCityNum < 0 || startCityNum >= totalCities)
+            return {shortestDistances, previousCity};
+
+        using CityDistance = pair<ll, int>;
+        priority_queue<CityDistance, vector<CityDistance>, greater<CityDistance>> citiesToCheck;
+
+        shortestDistances[startCityNum] = 0;
+        citiesToCheck.push({0, startCityNum});
+
+        while (!citiesToCheck.empty())
+        {
+            auto [currentDistance, currentCity] = citiesToCheck.top();
+            citiesToCheck.pop();
+
+            if (currentDistance != shortestDistances[currentCity])
+                continue;
+
+            for (const auto &road : roadsFromCity[currentCity])
+            {
+                if (!road.isOpen)
+                    continue;
+
+                int neighborCity = road.connectedCity;
+                ll newDistance = currentDistance + road.travelTime;
+
+                if (newDistance < shortestDistances[neighborCity])
+                {
+                    shortestDistances[neighborCity] = newDistance;
+                    previousCity[neighborCity] = currentCity;
+                    citiesToCheck.push({newDistance, neighborCity});
+                }
+            }
+        }
+
+        return {shortestDistances, previousCity};
+    }
 };
 
 
