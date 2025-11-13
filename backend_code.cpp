@@ -182,6 +182,54 @@ struct RoadMap // struct to create graph
         roadsFromCity[city2Number].push_back(Road(city1Number, travelTime, true, roadName));
     }
 
+    // Show all cities and roads in a readable format
+    void displayMapInfo(string &output) const
+    {
+        output.clear();
+        output += "Cities (" + to_string(totalCities) + "):\n";
+
+        for (int i = 0; i < totalCities; i++)
+        {
+            output += "  - " + numberToCity[i];
+            double lat = cityLatitudes[i];
+            double lon = cityLongitudes[i];
+            if (!isnan(lat) && !isnan(lon))
+                output += " [lat=" + to_string(lat) + ", lon=" + to_string(lon) + "]";
+            output += "\n";
+        }
+        
+        output += "\nRoads:\n";
+        set<pair<int, int>> shown;
+
+        for (int city = 0; city < totalCities; city++)
+        {
+            for (const auto &road : roadsFromCity[city])
+            {
+                int other = road.connectedCity;
+                if (city < other && shown.insert({city, other}).second)
+                {
+                    output += "  " + numberToCity[city] + " <-> " + numberToCity[other];
+                    output += " | time: " + to_string(road.travelTime);
+                    output += " | " + string(road.isOpen ? "open" : "blocked");
+                    if (!road.roadName.empty())
+                        output += " | name: " + road.roadName;
+                    output += "\n";
+                }
+            }
+        }
+    }
+
+    // Find which road connects to a specific city
+    int findRoadTo(int fromCity, int toCity)
+    {
+        for (int i = 0; i < (int)roadsFromCity[fromCity].size(); i++)
+        {
+            if (roadsFromCity[fromCity][i].connectedCity == toCity)
+                return i;
+        }
+
+        return -1;
+    }
 };
 
 
