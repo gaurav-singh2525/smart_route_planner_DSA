@@ -533,6 +533,73 @@ struct RoadMap // struct to create graph
 
         return true;
     }
+
+    bool simulateTrafficChange(mt19937 &randomGen, double minFactor, double maxFactor,
+                               string &affectedCity1, string &affectedCity2, ll &newTime)
+    {
+
+        if (totalCities < 1)
+            return false;
+
+        // Find all open roads
+        vector<pair<int, int>> openRoads;
+
+        for (int cityNum = 0; cityNum < totalCities; cityNum++)
+        {
+            for (int roadIdx = 0; roadIdx < (int)roadsFromCity[cityNum].size(); roadIdx++)
+            {
+                if (roadsFromCity[cityNum][roadIdx].isOpen &&
+                    cityNum < roadsFromCity[cityNum][roadIdx].connectedCity)
+                {
+                    openRoads.emplace_back(cityNum, roadIdx);
+                }
+            }
+        }
+
+        if (openRoads.empty())
+            return false;
+
+        // Pick a random road
+        uniform_int_distribution<size_t> pickRoad(0, openRoads.size() - 1);
+        size_t chosenRoad = pickRoad(randomGen);
+
+        int city1Num = openRoads[chosenRoad].first;
+        int roadIdx = openRoads[chosenRoad].second;
+        int city2Num = roadsFromCity[city1Num][roadIdx].connectedCity;
+
+        // Pick a random traffic factor
+        uniform_real_distribution<double> pickFactor(minFactor, maxFactor);
+        double trafficMultiplier = pickFactor(randomGen);
+
+        // Calculate new travel time
+        ll oldTime = roadsFromCity[city1Num][roadIdx].travelTime;
+        ll updatedTime = max(1LL, (ll)round(oldTime * trafficMultiplier));
+
+        int reverseRoadIdx = -1;
+        for (int i = 0; i < (int)roadsFromCity[city2Num].size(); i++)
+        {
+            if (roadsFromCity[city2Num][i].connectedCity == city1Num)
+            {
+                reverseRoadIdx = i;
+                break;
+            }
+        }
+
+        if (reverseRoadIdx == -1)
+            return false;
+
+        // Update both directions
+        roadsFromCity[city1Num][roadIdx].travelTime = updatedTime;
+        roadsFromCity[city2Num][reverseRoadIdx].travelTime = updatedTime;
+
+        // Return information about what changed
+        affectedCity1 = numberToCity[city1Num];
+        affectedCity2 = numberToCity[city2Num];
+        newTime = updatedTime;
+
+        return true;
+    }
+
 };
 
 
