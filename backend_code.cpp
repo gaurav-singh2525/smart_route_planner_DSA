@@ -1,1 +1,187 @@
-#include <bits
+// This is the main backend code with all the used functions
+// neccesary comments have been put to make it more easy to  unnderstand
+
+#include <bits/stdc++.h>
+#include <thread>
+#include <atomic>
+#include <random>
+#include <cmath>
+
+using namespace std;
+using ll = long long;
+
+// Represents a road connecting two cities
+struct Road //edge
+{
+    int connectedCity; // Which city this road goes to
+    ll travelTime;     // How long it takes to travel 
+    bool isOpen;       // Is the road open or blocked?
+    string roadName;   // Name of the road 
+
+    // constructor to create a new road
+    Road(int city = 0, ll time = 0, bool open = true, string name = "")
+    {
+        connectedCity = city;
+        travelTime = time;
+        isOpen = open;
+        roadName = name;
+    }
+};
+
+struct RoadMap // struct to create graph
+{
+    // store all roads for cities
+    vector<vector<Road>> roadsFromCity;
+
+    // Convert city names to numbers
+    unordered_map<string, int> cityToNumber;
+    //conert city number to name
+    vector<string> numberToCity;
+
+    // to store location of cities
+    vector<double> cityLatitudes;
+    vector<double> cityLongitudes;
+
+    int totalCities = 0;
+
+    // to find if the city exists
+    void makeSureCityExists(const string &cityName)
+    {
+
+        // check if city already exists
+        if (cityToNumber.find(cityName) == cityToNumber.end())
+        {
+            // City doesn't exist, so add it
+            cityToNumber[cityName] = totalCities;
+            totalCities++;
+            numberToCity.push_back(cityName);
+            roadsFromCity.emplace_back();
+
+            // Add empty coordinate
+            cityLatitudes.push_back(NAN);
+            cityLongitudes.push_back(NAN);
+        }
+    }
+
+   // Add a new city to the map
+    bool addNewCity(const string &cityName)
+    {
+        // If city already exists, return false
+        if (cityToNumber.find(cityName) != cityToNumber.end())
+            return false;
+
+        // Add the new city
+        cityToNumber[cityName] = totalCities;
+        totalCities++;
+        numberToCity.push_back(cityName);
+        roadsFromCity.emplace_back();
+        cityLatitudes.push_back(NAN);
+        cityLongitudes.push_back(NAN);
+
+        return true;
+    }
+
+  // Set the GPS coordinates for a city
+    void setCityLocation(const string &cityName, double lat, double lon)
+    {
+        // If city doesn't exist, create it first
+        if (cityToNumber.find(cityName) == cityToNumber.end())
+        {
+            cityToNumber[cityName] = totalCities;
+            totalCities++;
+            numberToCity.push_back(cityName);
+            roadsFromCity.emplace_back();
+            cityLatitudes.push_back(lat);
+            cityLongitudes.push_back(lon);
+        }
+        else
+        {
+            // City exists, just update coordinates
+            int cityNumber = cityToNumber[cityName];
+            // if citylatitudes doesnt have enough space then increase it
+            if (cityNumber >= cityLatitudes.size())
+            {
+            cityLatitudes.resize(cityNumber + 1, NAN);
+            cityLongitudes.resize(cityNumber + 1, NAN);
+            }
+            // store the coordinates
+            cityLatitudes[cityNumber] = lat;
+            cityLongitudes[cityNumber] = lon;
+        }
+    }
+
+    // get the coordinates of a city by its number
+    pair<double, double> getCityLocation(int cityNumber) const
+    {
+        // Check if city number is valid
+        if (cityNumber < 0 || cityNumber >= totalCities)
+            return {NAN, NAN};
+
+        return {cityLatitudes[cityNumber], cityLongitudes[cityNumber]};
+    }
+
+  // Find the closest city to given GPS coordinates for GUI pin point locations
+    int findClosestCity(double lat, double lon) const
+    {
+
+        double smallestDistance = INFINITY;
+        int closestCityNumber = -1;
+
+        for (int i = 0; i < totalCities; i++)
+        {
+            double cityLat = cityLatitudes[i];
+            double cityLon = cityLongitudes[i];
+
+            if (isnan(cityLat) || isnan(cityLon))
+                continue;
+
+            double latDiff = cityLat - lat;
+            double lonDiff = cityLon - lon;
+            double distanceSquared = latDiff * latDiff + lonDiff * lonDiff;
+
+            if (distanceSquared < smallestDistance)
+            {
+                smallestDistance = distanceSquared;
+                closestCityNumber = i;
+            }
+        }
+
+        return closestCityNumber;
+    }
+
+    // Add a road connecting two cities (works both ways)
+    void connectCities(const string &city1, const string &city2, ll travelTime, const string &roadName = "")
+    {
+      
+        // Make sure both cities exist, if not then add
+        // city 1
+        if (cityToNumber.find(city1) == cityToNumber.end())
+        {
+            cityToNumber[city1] = totalCities;
+            totalCities++;
+            numberToCity.push_back(city1);
+            roadsFromCity.emplace_back();
+            cityLatitudes.push_back(NAN);
+            cityLongitudes.push_back(NAN);
+        }
+        //city2
+        if (cityToNumber.find(city2) == cityToNumber.end())
+        {
+            cityToNumber[city2] = totalCities;
+            totalCities++;
+            numberToCity.push_back(city2);
+            roadsFromCity.emplace_back();
+            cityLatitudes.push_back(NAN);
+            cityLongitudes.push_back(NAN);
+        }
+
+        int city1Number = cityToNumber[city1];
+        int city2Number = cityToNumber[city2];
+
+        roadsFromCity[city1Number].push_back(Road(city2Number, travelTime, true, roadName));
+        roadsFromCity[city2Number].push_back(Road(city1Number, travelTime, true, roadName));
+    }
+
+};
+
+
