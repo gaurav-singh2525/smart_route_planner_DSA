@@ -230,6 +230,89 @@ struct RoadMap // struct to create graph
 
         return -1;
     }
+
+    // Open or close a road between two cities
+    bool setRoadStatus(const string &city1, const string &city2, bool shouldBeOpen)
+    {
+
+        auto city1Lookup = cityToNumber.find(city1);
+        auto city2Lookup = cityToNumber.find(city2);
+
+        if (city1Lookup == cityToNumber.end() || city2Lookup == cityToNumber.end())
+            return false;
+
+        int city1Num = city1Lookup->second;
+        int city2Num = city2Lookup->second;
+
+        int roadIndex1 = -1;
+        for (int i = 0; i < (int)roadsFromCity[city1Num].size(); i++)
+        {
+            if (roadsFromCity[city1Num][i].connectedCity == city2Num)
+            {
+                roadIndex1 = i;
+                break;
+            }
+        }
+
+        int roadIndex2 = -1;
+        for (int i = 0; i < (int)roadsFromCity[city2Num].size(); i++)
+        {
+            if (roadsFromCity[city2Num][i].connectedCity == city1Num)
+            {
+                roadIndex2 = i;
+                break;
+            }
+        }
+
+        if (roadIndex1 == -1 || roadIndex2 == -1)
+            return false;
+
+        roadsFromCity[city1Num][roadIndex1].isOpen = shouldBeOpen;
+        roadsFromCity[city2Num][roadIndex2].isOpen = shouldBeOpen;
+
+        return true;
+    }
+    // Change the travel time on a road
+    bool updateRoadTime(const string &city1, const string &city2, ll newTravelTime)
+    {
+
+        auto city1Lookup = cityToNumber.find(city1);
+        auto city2Lookup = cityToNumber.find(city2);
+
+        if (city1Lookup == cityToNumber.end() || city2Lookup == cityToNumber.end())
+            return false;
+
+        int city1Num = city1Lookup->second;
+        int city2Num = city2Lookup->second;
+
+        int roadIndex1 = -1;
+        for (int i = 0; i < (int)roadsFromCity[city1Num].size(); i++)
+        {
+            if (roadsFromCity[city1Num][i].connectedCity == city2Num)
+            {
+                roadIndex1 = i;
+                break;
+            }
+        }
+
+        int roadIndex2 = -1;
+        for (int i = 0; i < (int)roadsFromCity[city2Num].size(); i++)
+        {
+            if (roadsFromCity[city2Num][i].connectedCity == city1Num)
+            {
+                roadIndex2 = i;
+                break;
+            }
+        }
+
+        if (roadIndex1 == -1 || roadIndex2 == -1)
+            return false;
+
+        roadsFromCity[city1Num][roadIndex1].travelTime = newTravelTime;
+        roadsFromCity[city2Num][roadIndex2].travelTime = newTravelTime;
+
+        return true;
+    }
 };
 
 
