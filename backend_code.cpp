@@ -232,15 +232,15 @@ struct RoadMap // struct to create graph
     }
 
     // Open or close a road between two cities
-    bool setRoadStatus(const string &city1, const string &city2, bool shouldBeOpen)
+    bool setRoadStatus(const string &city1, const string &city2, bool curStatus)
     {
 
         auto city1Lookup = cityToNumber.find(city1);
         auto city2Lookup = cityToNumber.find(city2);
-
-        if (city1Lookup == cityToNumber.end() || city2Lookup == cityToNumber.end())
+        // chrck if the cities exist
+        if (cityToNumber.find(city1) == cityToNumber.end() || cityToNumber.find(city2) == cityToNumber.end())
             return false;
-
+        // get the node or number of the cities
         int city1Num = city1Lookup->second;
         int city2Num = city2Lookup->second;
 
@@ -267,15 +267,15 @@ struct RoadMap // struct to create graph
         if (roadIndex1 == -1 || roadIndex2 == -1)
             return false;
 
-        roadsFromCity[city1Num][roadIndex1].isOpen = shouldBeOpen;
-        roadsFromCity[city2Num][roadIndex2].isOpen = shouldBeOpen;
+        roadsFromCity[city1Num][roadIndex1].isOpen = curStatus;
+        roadsFromCity[city2Num][roadIndex2].isOpen = curStatus;
 
         return true;
     }
     // Change the travel time on a road
     bool updateRoadTime(const string &city1, const string &city2, ll newTravelTime)
     {
-
+        
         auto city1Lookup = cityToNumber.find(city1);
         auto city2Lookup = cityToNumber.find(city2);
 
@@ -314,39 +314,39 @@ struct RoadMap // struct to create graph
         return true;
     }
 
+
+    // Find shortest path from a starting city to all other cities (Dijkstra Algo)
     pair<vector<ll>, vector<int>> findShortestPaths(const string &startCity) const
     {
-        vector<ll> shortestDistances(totalCities, VERY_LARGE_NUMBER);
+        
+        vector<ll> shortestDistances(totalCities, INT_MAX);
         vector<int> previousCity(totalCities, -1);
 
+        // Look up the starting city
         auto cityLookup = cityToNumber.find(startCity);
         if (cityLookup == cityToNumber.end())
             return {shortestDistances, previousCity};
 
         int startCityNum = cityLookup->second;
-
         using CityDistance = pair<ll, int>;
         priority_queue<CityDistance, vector<CityDistance>, greater<CityDistance>> citiesToCheck;
 
         shortestDistances[startCityNum] = 0;
         citiesToCheck.push({0, startCityNum});
 
+        // Dijkstra loop
         while (!citiesToCheck.empty())
         {
             auto [currentDistance, currentCity] = citiesToCheck.top();
             citiesToCheck.pop();
-
             if (currentDistance != shortestDistances[currentCity])
                 continue;
-
             for (const auto &road : roadsFromCity[currentCity])
             {
                 if (!road.isOpen)
                     continue;
-
                 int neighborCity = road.connectedCity;
                 ll newDistance = currentDistance + road.travelTime;
-
                 if (newDistance < shortestDistances[neighborCity])
                 {
                     shortestDistances[neighborCity] = newDistance;
@@ -358,9 +358,11 @@ struct RoadMap // struct to create graph
 
         return {shortestDistances, previousCity};
     }
+
+    // Same function as above but it finds the using the number of the starting city
     pair<vector<ll>, vector<int>> findShortestPathsFromNumber(int startCityNum) const
     {
-        vector<ll> shortestDistances(totalCities, VERY_LARGE_NUMBER);
+        vector<ll> shortestDistances(totalCities, INT_MAX);
         vector<int> previousCity(totalCities, -1);
 
         if (startCityNum < 0 || startCityNum >= totalCities)
@@ -376,15 +378,12 @@ struct RoadMap // struct to create graph
         {
             auto [currentDistance, currentCity] = citiesToCheck.top();
             citiesToCheck.pop();
-
             if (currentDistance != shortestDistances[currentCity])
                 continue;
-
             for (const auto &road : roadsFromCity[currentCity])
             {
                 if (!road.isOpen)
                     continue;
-
                 int neighborCity = road.connectedCity;
                 ll newDistance = currentDistance + road.travelTime;
 
@@ -400,6 +399,8 @@ struct RoadMap // struct to create graph
         return {shortestDistances, previousCity};
     }
 
+
+    // Build the actual path by going backwards from destination
     vector<int> buildPath(const vector<int> &previousCity, int destinationCity) const
     {
         vector<int> path;
@@ -420,23 +421,24 @@ struct RoadMap // struct to create graph
     bool saveMapToFile(const string &filename) const
     {
         ofstream file(filename);
-
         if (!file)
             return false;
 
+        // Save number of cities
         file << totalCities << "\n";
-
+        // Save city names + coordinates
         for (int i = 0; i < totalCities; i++)
         {
             double lat = cityLatitudes[i];
             double lon = cityLongitudes[i];
-
+            file << numberToCity[i];
+            // Write coordinates only if valid
             if (!isnan(lat) && !isnan(lon))
-                file << numberToCity[i] << " " << fixed << setprecision(8) << lat << " " << lon << "\n";
-            else
-                file << numberToCity[i] << "\n";
+                file << " " << fixed << setprecision(8) << lat << " " << lon;
+            file << "\n";
         }
 
+    // Save roads (avoid duplicate undirected edges)
         set<pair<int, int>> savedRoads;
 
         for (int cityNum = 0; cityNum < totalCities; cityNum++)
@@ -444,24 +446,27 @@ struct RoadMap // struct to create graph
             for (const auto &road : roadsFromCity[cityNum])
             {
                 int otherCity = road.connectedCity;
+                // Only save each road once
+                if (cityNum >= otherCity || !savedRoads.insert({cityNum, otherCity}).second)
+                    continue;
+                // Basic road info
+                file << numberToCity[cityNum] << " "
+                     << numberToCity[otherCity] << " "
+                     << road.travelTime << " "
+                     << (road.isOpen ? 1 : 0) << " ";
+                // Convert spaces in road name to underscores
+                string roadNameForFile = road.roadName;
+                for (char &c : roadNameForFile)
+                    if (c == ' ')
+                        c = '_';
 
-                if (cityNum < otherCity && savedRoads.insert({cityNum, otherCity}).second)
-                {
-                    file << numberToCity[cityNum] << " " << numberToCity[otherCity] << " "
-                         << road.travelTime << " " << (road.isOpen ? 1 : 0) << " ";
-
-                    string roadNameForFile = road.roadName;
-                    for (char &c : roadNameForFile)
-                        if (c == ' ')
-                            c = '_';
-
-                    file << roadNameForFile << "\n";
-                }
+                file << roadNameForFile << "\n";
             }
         }
 
         return true;
     }
+
 
     // Load a map from a file
     bool loadMapFromFile(const string &filename)
@@ -482,26 +487,20 @@ struct RoadMap // struct to create graph
         // Read number of cities
         int numCities;
         file >> numCities;
-
         string line;
         getline(file, line);
 
         for (int i = 0; i < numCities; i++)
         {
             getline(file, line);
-
             if (!line.empty() && line.back() == '\r')
                 line.pop_back();
-
             if (line.empty())
                 continue;
-
             stringstream ss(line);
             string cityName;
             ss >> cityName;
-
             double lat, lon;
-
             if (ss >> lat >> lon)
             {
                 makeSureCityExists(cityName);
@@ -524,9 +523,7 @@ struct RoadMap // struct to create graph
             for (char &c : roadNameFromFile)
                 if (c == '_')
                     c = ' ';
-
             connectCities(city1, city2, travelTime, roadNameFromFile);
-
             bool isOpen = (isOpenInt == 1);
             setRoadStatus(city1, city2, isOpen);
         }
