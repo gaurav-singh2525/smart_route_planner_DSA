@@ -679,6 +679,48 @@ struct RoadMap // struct to create graph
 
         return {true, fullPath};
     }
+
 };
+
+void backgroundTrafficSimulation(RoadMap &map,
+                                 atomic<bool> &programRunning,
+                                 atomic<bool> &simulationOn,
+                                 function<void(const string &)> printMessage)
+{
+    mt19937 rng((unsigned)chrono::steady_clock::now().time_since_epoch().count());
+
+    const double minFactor = 0.7;   // 30% faster
+    const double maxFactor = 1.4;   // 40% slower
+    const int waitSec = 5;
+
+    while (true)
+    {
+        // If program not running yet, wait a bit
+        if (!programRunning)
+        {
+            this_thread::sleep_for(chrono::milliseconds(200));
+            continue;
+        }
+
+        // Wait before trying to update
+        this_thread::sleep_for(chrono::seconds(waitSec));
+
+        // Skip if program stopped or simulation paused
+        if (!programRunning || !simulationOn)
+            continue;
+
+        string cityA, cityB;
+        ll newTime = -1;
+
+        bool ok = map.simulateTrafficChange(rng, minFactor, maxFactor,
+                                            cityA, cityB, newTime);
+
+        if (ok && printMessage)
+        {
+            printMessage("[Traffic Update] " + cityA + " <-> " + cityB +
+                         " now has travel time " + to_string(newTime));
+        }
+    }
+}
 
 
