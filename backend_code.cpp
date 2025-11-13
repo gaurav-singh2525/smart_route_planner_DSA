@@ -399,6 +399,140 @@ struct RoadMap // struct to create graph
 
         return {shortestDistances, previousCity};
     }
+
+    vector<int> buildPath(const vector<int> &previousCity, int destinationCity) const
+    {
+        vector<int> path;
+        int currentCity = destinationCity;
+
+        while (currentCity != -1)
+        {
+            path.push_back(currentCity);
+            currentCity = previousCity[currentCity];
+        }
+
+        reverse(path.begin(), path.end());
+
+        return path;
+    }
+
+    // Save the map to a file
+    bool saveMapToFile(const string &filename) const
+    {
+        ofstream file(filename);
+
+        if (!file)
+            return false;
+
+        file << totalCities << "\n";
+
+        for (int i = 0; i < totalCities; i++)
+        {
+            double lat = cityLatitudes[i];
+            double lon = cityLongitudes[i];
+
+            if (!isnan(lat) && !isnan(lon))
+                file << numberToCity[i] << " " << fixed << setprecision(8) << lat << " " << lon << "\n";
+            else
+                file << numberToCity[i] << "\n";
+        }
+
+        set<pair<int, int>> savedRoads;
+
+        for (int cityNum = 0; cityNum < totalCities; cityNum++)
+        {
+            for (const auto &road : roadsFromCity[cityNum])
+            {
+                int otherCity = road.connectedCity;
+
+                if (cityNum < otherCity && savedRoads.insert({cityNum, otherCity}).second)
+                {
+                    file << numberToCity[cityNum] << " " << numberToCity[otherCity] << " "
+                         << road.travelTime << " " << (road.isOpen ? 1 : 0) << " ";
+
+                    string roadNameForFile = road.roadName;
+                    for (char &c : roadNameForFile)
+                        if (c == ' ')
+                            c = '_';
+
+                    file << roadNameForFile << "\n";
+                }
+            }
+        }
+
+        return true;
+    }
+
+    // Load a map from a file
+    bool loadMapFromFile(const string &filename)
+    {
+        ifstream file(filename);
+
+        if (!file)
+            return false;
+
+        // Clear existing data
+        cityToNumber.clear();
+        numberToCity.clear();
+        roadsFromCity.clear();
+        cityLatitudes.clear();
+        cityLongitudes.clear();
+        totalCities = 0;
+
+        // Read number of cities
+        int numCities;
+        file >> numCities;
+
+        string line;
+        getline(file, line);
+
+        for (int i = 0; i < numCities; i++)
+        {
+            getline(file, line);
+
+            if (!line.empty() && line.back() == '\r')
+                line.pop_back();
+
+            if (line.empty())
+                continue;
+
+            stringstream ss(line);
+            string cityName;
+            ss >> cityName;
+
+            double lat, lon;
+
+            if (ss >> lat >> lon)
+            {
+                makeSureCityExists(cityName);
+                int cityNum = cityToNumber[cityName];
+                cityLatitudes[cityNum] = lat;
+                cityLongitudes[cityNum] = lon;
+            }
+            else
+            {
+                makeSureCityExists(cityName);
+            }
+        }
+
+        string city1, city2, roadNameFromFile;
+        ll travelTime;
+        int isOpenInt;
+
+        while (file >> city1 >> city2 >> travelTime >> isOpenInt >> roadNameFromFile)
+        {
+            for (char &c : roadNameFromFile)
+                if (c == '_')
+                    c = ' ';
+
+            connectCities(city1, city2, travelTime, roadNameFromFile);
+
+            bool isOpen = (isOpenInt == 1);
+            setRoadStatus(city1, city2, isOpen);
+        }
+
+        return true;
+    }
 };
 
 
