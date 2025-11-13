@@ -641,6 +641,44 @@ struct RoadMap // struct to create graph
         totalTime = distances[endCity];
         return {true, cityNames};
     }
+    // Find a route that goes through multiple cities in order
+    pair<bool, vector<string>> findRouteWithStops(const vector<string> &citiesInOrder,
+                                                  ll &totalTime) const
+    {
+        vector<string> fullPath;
+        totalTime = 0;
+
+        // Go through each pair of cities
+        for (size_t i = 0; i < citiesInOrder.size() - 1; i++)
+        {
+            auto [distances, previousCities] = findShortestPaths(citiesInOrder[i]);
+
+
+            auto cityLookup = cityToNumber.find(citiesInOrder[i + 1]);
+            if (cityLookup == cityToNumber.end())
+                return {false, {}};
+
+            int nextCityNum = cityLookup->second;
+
+            // Check if next city is reachable
+            if (distances[nextCityNum] >= VERY_LARGE_NUMBER)
+                return {false, {}};
+
+            // Add distance to total
+            totalTime += distances[nextCityNum];
+
+            // Build this part of the path
+            auto pathSegment = buildPath(previousCities, nextCityNum);
+
+            if (i > 0 && !pathSegment.empty())
+                pathSegment.erase(pathSegment.begin());
+
+            for (int cityNum : pathSegment)
+                fullPath.push_back(numberToCity[cityNum]);
+        }
+
+        return {true, fullPath};
+    }
 };
 
 
