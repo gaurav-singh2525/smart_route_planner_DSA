@@ -34,6 +34,14 @@ A DSA-focused route planning system built using C++ (Qt Framework) that visualiz
 - Uses **mutex locks** for safe concurrent access  
 - Separate thread handles **traffic simulation** independently  
 
+## IMPORTANT NOTE 
+
+ - All the GUI functions and methods are implemented after utilizing various online resources because,
+ we didnt have much knowledge about funtioninga and syntaxes of QT
+ - Most the logics ,functions and Data Structures used in backend_code.cpp, we tried to implement it
+ourselves,of course we have taken help of online resources but that too is for optimization and smplification 
+- There were one or two advanced level things (such as threading and autotraffic change simulator) but we first learned about it then implemented it.
+
 ## File Structure
 
 Smart-Route-Planner/
@@ -70,7 +78,7 @@ Smart-Route-Planner/
 
  ## Core DSA Concepts used
  
-- 🕸️ Graph Representation (Adjacency List) -> for graph creation
+ - 🕸️ Graph Representation (Adjacency List) -> for graph creation
  - ⚡ Dijkstra’s Algorithm ->for finding the shortest path between cities
  - ⏳ Priority Queue (Min-Heap)
  - 📦 Hash Maps (Unordered Map) -> to map cities to their alloted number
@@ -79,3 +87,4 @@ Smart-Route-Planner/
  - 🔐 Thread Safety with Mutex and Atomic Variables
  - 🔄 Randomization & Simulation -> to update the traffic weights randomly
  - 💾 File I/O -> save and load map directly from a file
+
