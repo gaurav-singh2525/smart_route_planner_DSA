@@ -600,6 +600,47 @@ struct RoadMap // struct to create graph
         return true;
     }
 
+    // Find shortest path between two GPS coordinates
+    pair<bool, vector<string>> findPathByCoordinates(double startLat, double startLon,
+                                                     double endLat, double endLon,
+                                                     ll &totalTime) const
+    {
+        // Find nearest cities to the GPS points
+        int startCity = findClosestCity(startLat, startLon);
+        int endCity = findClosestCity(endLat, endLon);
+
+        if (startCity == -1 || endCity == -1)
+        {
+            totalTime = -1;
+            return {false, {}};
+        }
+
+        // Find shortest path
+        auto pathData = findShortestPathsFromNumber(startCity);
+        auto distances = pathData.first;
+        auto previousCities = pathData.second;
+
+        // Check if destination is reachable
+        if (endCity < 0 || endCity >= (int)distances.size() ||
+            distances[endCity] >= VERY_LARGE_NUMBER)
+        {
+            totalTime = -1;
+            return {false, {}};
+        }
+
+        // Build the path
+        auto pathNumbers = buildPath(previousCities, endCity);
+
+        // Convert city numbers to city names
+        vector<string> cityNames;
+        {
+            for (int cityNum : pathNumbers)
+                cityNames.push_back(numberToCity[cityNum]);
+        }
+
+        totalTime = distances[endCity];
+        return {true, cityNames};
+    }
 };
 
 
