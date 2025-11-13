@@ -531,71 +531,75 @@ struct RoadMap // struct to create graph
         return true;
     }
 
-    bool simulateTrafficChange(mt19937 &randomGen, double minFactor, double maxFactor,
-                               string &affectedCity1, string &affectedCity2, ll &newTime)
+//function to change the trafficweight using the gui menu button
+   bool simulateTrafficChange(mt19937 &randomGen, double minFactor, double maxFactor,
+                           string &affectedCity1, string &affectedCity2, ll &newTime)
+{
+    // If no cities exist, nothing to update
+    if (totalCities < 1)
+        return false;
+
+    // Collect all open roads (each undirected road only once)
+    vector<pair<int, int>> openRoads;
+
+    for (int cityNum = 0; cityNum < totalCities; cityNum++)
     {
-
-        if (totalCities < 1)
-            return false;
-
-        // Find all open roads
-        vector<pair<int, int>> openRoads;
-
-        for (int cityNum = 0; cityNum < totalCities; cityNum++)
+        for (int roadIdx = 0; roadIdx < (int)roadsFromCity[cityNum].size(); roadIdx++)
         {
-            for (int roadIdx = 0; roadIdx < (int)roadsFromCity[cityNum].size(); roadIdx++)
-            {
-                if (roadsFromCity[cityNum][roadIdx].isOpen &&
-                    cityNum < roadsFromCity[cityNum][roadIdx].connectedCity)
-                {
-                    openRoads.emplace_back(cityNum, roadIdx);
-                }
-            }
+            const auto &road = roadsFromCity[cityNum][roadIdx];
+
+            // Only consider open roads; avoid duplicates by checking cityNum < connectedCity
+            if (road.isOpen && cityNum < road.connectedCity)
+                openRoads.emplace_back(cityNum, roadIdx);
         }
-
-        if (openRoads.empty())
-            return false;
-
-        // Pick a random road
-        uniform_int_distribution<size_t> pickRoad(0, openRoads.size() - 1);
-        size_t chosenRoad = pickRoad(randomGen);
-
-        int city1Num = openRoads[chosenRoad].first;
-        int roadIdx = openRoads[chosenRoad].second;
-        int city2Num = roadsFromCity[city1Num][roadIdx].connectedCity;
-
-        // Pick a random traffic factor
-        uniform_real_distribution<double> pickFactor(minFactor, maxFactor);
-        double trafficMultiplier = pickFactor(randomGen);
-
-        // Calculate new travel time
-        ll oldTime = roadsFromCity[city1Num][roadIdx].travelTime;
-        ll updatedTime = max(1LL, (ll)round(oldTime * trafficMultiplier));
-
-        int reverseRoadIdx = -1;
-        for (int i = 0; i < (int)roadsFromCity[city2Num].size(); i++)
-        {
-            if (roadsFromCity[city2Num][i].connectedCity == city1Num)
-            {
-                reverseRoadIdx = i;
-                break;
-            }
-        }
-
-        if (reverseRoadIdx == -1)
-            return false;
-
-        // Update both directions
-        roadsFromCity[city1Num][roadIdx].travelTime = updatedTime;
-        roadsFromCity[city2Num][reverseRoadIdx].travelTime = updatedTime;
-
-        // Return information about what changed
-        affectedCity1 = numberToCity[city1Num];
-        affectedCity2 = numberToCity[city2Num];
-        newTime = updatedTime;
-
-        return true;
     }
+
+    // No open roads to modify
+    if (openRoads.empty())
+        return false;
+
+    // Pick a random open road
+    uniform_int_distribution<size_t> pickRoad(0, openRoads.size() - 1);
+    size_t chosenRoad = pickRoad(randomGen);
+
+    int city1Num = openRoads[chosenRoad].first;
+    int roadIdx = openRoads[chosenRoad].second;
+    int city2Num = roadsFromCity[city1Num][roadIdx].connectedCity;
+
+    // Random traffic multiplier
+    uniform_real_distribution<double> pickFactor(minFactor, maxFactor);
+    double trafficMultiplier = pickFactor(randomGen);
+
+    // Calculate updated travel time
+    ll oldTime = roadsFromCity[city1Num][roadIdx].travelTime;
+    ll updatedTime = max(1LL, (ll)round(oldTime * trafficMultiplier));
+
+    // Find reverse road index (city2 -> city1)
+    int reverseRoadIdx = -1;
+    for (int i = 0; i < (int)roadsFromCity[city2Num].size(); i++)
+    {
+        if (roadsFromCity[city2Num][i].connectedCity == city1Num)
+        {
+            reverseRoadIdx = i;
+            break;
+        }
+    }
+
+    // Roads must always be bidirectional, so missing reverse road means error
+    if (reverseRoadIdx == -1)
+        return false;
+
+    // Update travel time in both directions
+    roadsFromCity[city1Num][roadIdx].travelTime = updatedTime;
+    roadsFromCity[city2Num][reverseRoadIdx].travelTime = updatedTime;
+
+    // Return which cities were affected and the new time
+    affectedCity1 = numberToCity[city1Num];
+    affectedCity2 = numberToCity[city2Num];
+    newTime = updatedTime;
+
+    return true;
+}
 
     // Find shortest path between two GPS coordinates
     pair<bool, vector<string>> findPathByCoordinates(double startLat, double startLon,
