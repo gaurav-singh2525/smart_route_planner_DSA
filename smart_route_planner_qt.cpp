@@ -1,6 +1,6 @@
-/* 
-   smart_route_planner_qt.cpp
-*/
+//this is backenb code integrated with QT GUI 
+//for implentation of raw backend code visit backend_code.cpp
+
 #include <QtWidgets>
 #include <QtWebEngineWidgets>
 #include <QtWebChannel>
