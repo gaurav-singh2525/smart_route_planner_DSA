@@ -42,27 +42,12 @@ A DSA-focused route planning system built using C++ (Qt Framework) that visualiz
 ourselves,of course we have taken help of online resources but that too is for optimization and smplification 
 - There were one or two advanced level things (such as threading and autotraffic change simulator) but we first learned about it then implemented it.
 
-## File Structure
+## Contribution
 
-Smart-Route-Planner/
-│
-├── src/
-│   └── smart_route_planner_qt.cpp      # Main source code file integrated with Qt GUI
-│
-├── web/
-│   └── map.html                        # Displays an interactive map using Leaflet.js and OpenStreetMap
-│                                       # Allows users to directly select cities from the map interface
-│
-├── project/
-│   └── smart_route_planner_qt.pro      # Qt project file containing library and build configurations
-│
-├── backend/
-│   └── backend_code.cpp                # (Important) Contains all core DSA logic and backend functions
-│                                       # Handles route calculations, graph algorithms, and data management
-│
-├── README.md                           # Project documentation and overview
-│
-└── LICENSE                             # Open-source license (optional but recommended)
+- **GAURAV SINGH (B24EE1020)** -> Helped with Ideation of project and optimization of algorithm logics and functions, also helped in GUI                                                 implementation.
+- **GAUTAM (B24CM1024)** -> Helped in implementation and simplification of algoritm logics and functions, also added real-life features.
+- **AAYAN RAJ (B24CS1003)** -> Helped in adding new features, suggested ways to add more practical features.
+- **KAPIL (B24EE1031)** -> Helped with GUI development, simplified various functions and helped with API implementation.
 
 
 ## How to run
