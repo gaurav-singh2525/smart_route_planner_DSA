@@ -45,7 +45,7 @@ ourselves,of course we have taken help of online resources but that too is for o
 ## Contribution
 
 - **GAURAV SINGH (B24EE1020)** -> Helped with Ideation of project and optimization of algorithm logics and functions, also helped in GUI                                                 implementation.
-- **GAUTAM (B24CM1024)** -> Helped in implementation and simplification of algoritm logics and functions, also added real-life features.
+- **GAUTAM (B24CM1024)** -> Helped in management and simplification of algoritm logics and functions, also added real-life features.
 - **AAYAN RAJ (B24CS1003)** -> Helped in adding new features, suggested ways to add more practical features.
 - **KAPIL (B24EE1031)** -> Helped with GUI development, simplified various functions and helped with API implementation.
 
